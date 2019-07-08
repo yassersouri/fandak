@@ -18,6 +18,7 @@ setuptools.setup(
         "torchvision>=0.3,<1",
         "tqdm>=4.32,<5",
         "matplotlib>=3.1.1,<4",
+        "tensorboard>=1.14.0,<2",
     ],
     classifiers=[
         "Programming Language :: Python :: 3.7",
