@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="fandak",
-    version="0.0.1a1.dev5",
+    version="0.0.1a2",
     author="Yasser Souri",
     author_email="yassersouri@gmail.com",
     description="A Framework for Deep Learning Research in PyTorch.",
@@ -20,6 +20,7 @@ setuptools.setup(
         "matplotlib>=3.1.1,<4",
         "tensorboard>=1.14.0,<2",
         "future>=0.17.1,<1",
+        "yacs>=0.1.6,<0.2",
     ],
     classifiers=[
         "Programming Language :: Python :: 3.7",
