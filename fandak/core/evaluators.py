@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from fandak.core.datasets import Dataset
 from fandak.core.models import Model
-from fandak.helpers import send_to_device
+from fandak.utils.torch import send_to_device
 
 
 class Evaluator(ABC):

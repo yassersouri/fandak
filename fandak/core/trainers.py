@@ -20,12 +20,8 @@ from tqdm import tqdm
 from fandak.core.datasets import Dataset
 from fandak.core.evaluators import Evaluator
 from fandak.core.models import Model
-from fandak.helpers import (
-    send_to_device,
-    standard_repr,
-    get_git_commit_hash,
-    print_with_time,
-)
+from fandak.utils.torch import send_to_device
+from fandak.utils.misc import get_git_commit_hash, print_with_time
 
 TORCH_EXT = "trc"
 PICKLE_EXT = "pkl"
