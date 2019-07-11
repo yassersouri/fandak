@@ -11,6 +11,16 @@ _C.system.seed = 1
 _C.dataset = CN()
 _C.dataset.name = "digit"  # digit, fashion
 _C.dataset.root = "/home/souri/temp/"
+_C.dataset.x_size = 784
+_C.dataset.num_classes = 10
+
+_C.model = CN()
+_C.model.name = "MLP"  # MLP
+
+_C.model.mlp = CN()
+_C.model.mlp.num_layers = 1
+_C.model.mlp.num_hidden = 128
+_C.model.mlp.last_drop = 0.0
 
 
 def get_config_defaults():
