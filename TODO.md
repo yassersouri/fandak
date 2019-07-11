@@ -1,7 +1,21 @@
 # TODOS
 
- - [ ] Change repr system to json only.
- - [x] Add yacs.
+ - [ ] Change repr system to config + system call + hash
+    - [x] Dataset
+    - [ ] Model
+    - [ ] Evaluator
+    - [ ] Trainer
+ - [x] Add yacs
  - [ ] Specify the return types as dataclasses.
+    - [x] Dataset
+    - [ ] Model
+    - [ ] Evaluator
+    - [ ] Trainer
  - [ ] Specify model, dataset, trainer, etc. creation from the config file.
-
+    - [x] Dataset
+    - [ ] Model
+    - [ ] Evaluator
+    - [ ] Trainer
+ - [ ] Add repr of experiment as `writer.add_text`
+ - [ ] Add overfit sampler
+ - [ ] Add metrics for evaluator and trainer
