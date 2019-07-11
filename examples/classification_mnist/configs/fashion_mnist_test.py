@@ -1,0 +1,1 @@
+cfg = {"dataset": {"name": "fashion"}}
