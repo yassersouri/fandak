@@ -12,7 +12,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/yassersouri/fandak",
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages(exclude=['docs', 'examples', 'tests', 'scripts']),
     install_requires=[
         "torch>=1.0,<2",
         "torchvision>=0.3,<1",
