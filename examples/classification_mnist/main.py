@@ -2,7 +2,7 @@ from torch.utils.data import DataLoader
 
 from fandak.utils.config import update_config
 from proj.config import get_config_defaults
-from proj.datasets import MNISTClassification, BatchType
+from proj.datasets import MNISTClassification, Batch
 
 
 def main():
@@ -12,7 +12,7 @@ def main():
     train_db = MNISTClassification(cfg, train=True)
     # test_db = MNISTClassification(cfg, train=False)
 
-    train_loader = DataLoader(train_db, batch_size=2, collate_fn=BatchType.default_collate)
+    train_loader = DataLoader(train_db, batch_size=2, collate_fn=Batch.default_collate)
 
     x = train_loader.__iter__().__next__()
     print(x)

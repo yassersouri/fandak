@@ -11,9 +11,9 @@ from fandak.utils.torch import GeneralDataClass
 
 
 @dataclass
-class GeneralBatchType(GeneralDataClass):
+class GeneralBatch(GeneralDataClass):
     @classmethod
-    def default_collate(cls, items: List["GeneralBatchType"]) -> "GeneralBatchType":
+    def default_collate(cls, items: List["GeneralBatch"]) -> "GeneralBatch":
         """
         Uses default_collate from `torch.utils.data.Dataloader.default_collate`
         for every attribute of the type to collate them together.
@@ -36,11 +36,11 @@ class Dataset(tDataset):
     def __len__(self) -> int:
         raise NotImplementedError
 
-    def __getitem__(self, item: int) -> GeneralBatchType:
+    def __getitem__(self, item: int) -> GeneralBatch:
         raise NotImplementedError
 
     @staticmethod
-    def collate_fn(items: List[GeneralBatchType]) -> GeneralBatchType:
+    def collate_fn(items: List[GeneralBatch]) -> GeneralBatch:
         """
         Each dataset class should implement its own collate function.
         """

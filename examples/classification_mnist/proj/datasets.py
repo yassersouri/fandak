@@ -8,11 +8,11 @@ from torchvision.transforms import transforms
 from yacs.config import CfgNode
 
 from fandak import Dataset
-from fandak.core.datasets import GeneralBatchType
+from fandak.core.datasets import GeneralBatch
 
 
 @dataclass
-class BatchType(GeneralBatchType):
+class Batch(GeneralBatch):
     x: Tensor  # [784] float
     y: Tensor  # [1] long
 
@@ -37,11 +37,11 @@ class MNISTClassification(Dataset):
     def __len__(self) -> int:
         return self.mnist.__len__()
 
-    def __getitem__(self, item: int) -> BatchType:
+    def __getitem__(self, item: int) -> Batch:
         img, target = self.mnist.__getitem__(item)
-        batch = BatchType(x=img.view(-1), y=torch.tensor(target).long())
+        batch = Batch(x=img.view(-1), y=torch.tensor(target).long())
         return batch
 
     @staticmethod
-    def collate_fn(items: List[GeneralBatchType]) -> GeneralBatchType:
+    def collate_fn(items: List[GeneralBatch]) -> GeneralBatch:
         pass
