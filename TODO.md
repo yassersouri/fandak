@@ -2,20 +2,25 @@
 
  - [ ] Change repr system to config + system call + hash
     - [x] Dataset
-    - [ ] Model
+    - [x] Model
     - [ ] Evaluator
     - [ ] Trainer
  - [x] Add yacs
  - [ ] Specify the return types as dataclasses.
     - [x] Dataset
-    - [ ] Model
+    - [x] Model
     - [ ] Evaluator
     - [ ] Trainer
  - [ ] Specify model, dataset, trainer, etc. creation from the config file.
     - [x] Dataset
-    - [ ] Model
+    - [x] Model
     - [ ] Evaluator
     - [ ] Trainer
  - [ ] Add repr of experiment as `writer.add_text`
  - [ ] Add overfit sampler
  - [ ] Add metrics for evaluator and trainer
+ - [ ] Trainer fixes
+    - [ ] Add create optimizer and create scheduler
+    - [x] Add more abstract method to implement from the config instead of adding arguments to Trainer constructor.
+    - [x] Use Path instead of str.
+    - [ ] Automatically create a metric for main loss and each evaluation.
