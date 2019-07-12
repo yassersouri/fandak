@@ -1,5 +1,5 @@
 import random
-from typing import Union, Collection, List
+from typing import Union, Collection, List, Callable, Tuple
 
 import numpy as np
 import torch
@@ -72,12 +72,15 @@ class OverfitSampler(Sampler):
 
 
 class GeneralDataClass:
+    def filter_attributes(
+        self, the_filter: Callable[["GeneralDataClass", str], bool]
+    ) -> List[str]:
+        return [a for a in dir(self) if the_filter(self, a)]
+
     def get_attribute_names(self) -> List[str]:
-        return [
-            a
-            for a in dir(self)
-            if not a.startswith("__") and not callable(getattr(self, a))
-        ]
+        return self.filter_attributes(
+            lambda gdc, a: not a.startswith("__") and not callable(getattr(gdc, a))
+        )
 
     def to(self, device: torch.device):
         for attr_name in self.get_attribute_names():
