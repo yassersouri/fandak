@@ -9,6 +9,8 @@ Will help you train your models for research.
 
 ## Installation
 
+:exclamation: Requires Python 3.7 :snake:.
+
 `pip install fandak`
 
 ## Examples
