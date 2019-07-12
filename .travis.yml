@@ -7,3 +7,5 @@ install:
 script:
   - black --check fandak
   - python -m pytest
+notifications:
+  email: false
