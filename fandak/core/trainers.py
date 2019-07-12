@@ -20,7 +20,6 @@ from fandak.core.evaluators import Evaluator, GeneralEvaluatorResult
 from fandak.core.models import Model, GeneralLoss, GeneralForwardOut
 from fandak.utils.metrics import ScalarMetric, ScalarMetricCollection
 from fandak.utils.misc import get_git_commit_hash, print_with_time
-from fandak.utils.torch import send_to_device
 
 TORCH_EXT = "trc"
 PICKLE_EXT = "pkl"
