@@ -6,3 +6,11 @@
 Coming soon...
 
 Will help you train your models for research.
+
+## Installation
+
+`pip install fandak`
+
+## Examples
+
+See `examples` directory.
