@@ -1,20 +1,20 @@
 # TODOS
 
- - [ ] Change repr system to config + system call + hash
+ - [x] Change repr system to config + system call + hash
     - [x] Dataset
     - [x] Model
-    - [ ] Evaluator
+    - [x] Evaluator
     - [x] Trainer
  - [x] Add yacs
- - [ ] Specify the return types as dataclasses.
+ - [x] Specify the return types as dataclasses.
     - [x] Dataset
     - [x] Model
-    - [ ] Evaluator
+    - [x] Evaluator
     - [x] Trainer
- - [ ] Specify model, dataset, trainer, etc. creation from the config file.
+ - [x] Specify model, dataset, trainer, etc. creation from the config file.
     - [x] Dataset
     - [x] Model
-    - [ ] Evaluator
+    - [x] Evaluator
     - [x] Trainer
  - [x] Add repr of experiment as `writer.add_text`
  - [x] Add overfit sampler

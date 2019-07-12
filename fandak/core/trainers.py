@@ -240,9 +240,6 @@ class Trainer(ABC):
         assert epoch >= 0
         self.run_number = run
         self.epoch_num = epoch - 1  # todo: is this correct?
-        if self.evaluators is not None:
-            for ev in self.evaluators:
-                ev.set_epoch_number(self.epoch_num)
 
         # this is not a good thing to do, we need a way to save the iter_num on disk maybe.
         self.iter_num = (1 + self.epoch_num) * len(self.train_db)
