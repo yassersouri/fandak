@@ -5,4 +5,5 @@ python:
 install:
   - pip install -r requirements_dev.txt
 script:
+  - black --check fandak
   - python -m pytest
