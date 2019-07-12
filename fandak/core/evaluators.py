@@ -1,4 +1,5 @@
 from abc import ABC
+from dataclasses import dataclass
 from typing import Tuple, Optional
 
 import torch
@@ -10,6 +11,11 @@ from tqdm import tqdm
 from fandak.core.datasets import Dataset
 from fandak.core.models import Model
 from fandak.utils.torch import send_to_device
+
+
+@dataclass
+class GeneralEvaluatorResult:
+    pass
 
 
 class Evaluator(ABC):
@@ -34,6 +40,9 @@ class Evaluator(ABC):
         self.batch_size = batch_size
         self.num_workers = num_workers
 
+    def get_name(self) -> str:  # used in metrics
+        return self.__class__.__name__
+
     def set_test_mode(self, test_mode: bool):
         self.test_mode = test_mode
 
@@ -44,7 +53,7 @@ class Evaluator(ABC):
         self.epoch_num = epoch_num
         self.test_iter_num = (1 + self.epoch_num) * len(self.test_db)
 
-    def evaluate(self):
+    def evaluate(self) -> GeneralEvaluatorResult:
         self.on_start_eval()
         dataloader = DataLoader(
             self.test_db,

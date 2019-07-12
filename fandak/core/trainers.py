@@ -1,27 +1,26 @@
 import datetime
-import os
 import sys
 from abc import ABC
-from json import dump as jdump
-from json import dumps as jdumps
+from pathlib import Path
 from pickle import dump as pdump
-from typing import Optional, Tuple, List, Union
+from typing import Optional, Tuple, List, Union, Iterable, Dict
 
 import matplotlib.pylab as plt
 import torch
-from torch import Tensor
 from torch.nn.utils import clip_grad_norm_
-from torch.optim import Optimizer
-from torch.optim.lr_scheduler import MultiStepLR
+from torch.optim.lr_scheduler import MultiStepLR, StepLR, LambdaLR
+from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
+from yacs.config import CfgNode
 
-from fandak.core.datasets import Dataset
-from fandak.core.evaluators import Evaluator
-from fandak.core.models import Model
-from fandak.utils.torch import send_to_device
+from fandak.core.datasets import Dataset, GeneralBatch
+from fandak.core.evaluators import Evaluator, GeneralEvaluatorResult
+from fandak.core.models import Model, GeneralLoss, GeneralForwardOut
+from fandak.utils.metrics import ScalarMetric, ScalarMetricCollection
 from fandak.utils.misc import get_git_commit_hash, print_with_time
+from fandak.utils.torch import send_to_device
 
 TORCH_EXT = "trc"
 PICKLE_EXT = "pkl"
@@ -29,208 +28,205 @@ MODEL_FILE_NAME = "model"
 OPTIMIZER_FILE_NAME = "optimizer"
 SCHEDULER_FILE_NAME = "scheduler"
 
+Scheduler = Union[MultiStepLR, StepLR, LambdaLR]
+
 
 class Trainer(ABC):
+    main_loss_metric_name = "main/loss"
+    eval_metric_name_format = "eval/{}"
+
     def __init__(
         self,
+        cfg: CfgNode,
         exp_name: str,
-        results_root: str,
         train_db: Dataset,
         model: Model,
-        optimizer: Optimizer,
-        scheduler: Optional[MultiStepLR] = None,
-        batch_size: int = 1,
         device: torch.device = torch.device("cpu"),
-        seed=0,
-        evaluators: Optional[Union[List[Evaluator], Evaluator]] = None,
-        clip_grad_norm: Optional[float] = None,
-        fast: bool = True,
-        num_workers: int = 1,
-        **kwargs
+        evaluators: Optional[Union[Iterable[Evaluator], Evaluator]] = None,
     ):
+        self.cfg = cfg
         self.exp_name = exp_name
         self.train_db = train_db
         self.model = model
-        self.optimizer = optimizer
-        self.scheduler = scheduler
-        self.batch_size = batch_size
         self.device = device
-        self.seed = seed
-        self.fast = fast
-        self.num_workers = num_workers
-        self.kwargs = kwargs
-        self.results_root = results_root
-        self.tb_root = os.path.join(self.results_root, "TB")
-
         if evaluators is not None:
-            if type(evaluators) is not list:
+            if not isinstance(evaluators, Iterable):
                 evaluators = [evaluators]
-        self.evaluators = evaluators  # type: Optional[List[Evaluator]]
+        else:
+            evaluators = []
+        self.evaluators = evaluators  # type: Iterable[Evaluator]
 
-        self.clip_grad_norm = clip_grad_norm
+        self.shuffle = True
+        self.save_every = 1
+        self.eval_every = 1
 
+        self.root = self.figure_root()
+        self.optimizer = self.figure_optimizer()
+        self.scheduler = self.figure_scheduler()
+        self.clip_grad_norm = self.figure_clip_grad_norm()
+
+        self.tb_root = self.root / "TB"
         self.model.to(device)
-
-        self.epoch_num = -1  # before training
+        self.epoch_num = 0
         self.iter_num = 0
-        self.test_iter_num = 0
-        self.minibatch_losses = None
-        self.epoch_losses = []
-        self.evaluation_values = []
 
-        self.experiment_folder = os.path.join(self.results_root, self.exp_name)
-        os.makedirs(self.experiment_folder, exist_ok=True)
+        self.experiment_folder = self.root / self.exp_name
+        self.experiment_folder.mkdir(exist_ok=True)
         self.run_number = self._figure_run_number()
-        self.additional_tb_name = self.__repr__()
         self._set_run_folder()
+        self.metrics = self.create_metrics()
+        self.update_trainer_using_config()
 
     def _set_run_folder(self):
-        self.run_folder = os.path.join(self.experiment_folder, "%d" % self.run_number)
-        self.tb_folder = os.path.join(
-            self.tb_root, self.exp_name, "%d" % self.run_number
-        )
-        self.writer = SummaryWriter(self.tb_folder, comment=self.additional_tb_name)
-
-        if self.evaluators is not None:
-            for ev in self.evaluators:
-                ev.set_writer(self.writer)
-
-    def _get_training_repr(self) -> str:
-        # TODO: change to json
-        # noinspection PyListCreation
-        result = ["batch_size(%d)" % self.batch_size]
-        optimizer_props = [("lr", str(self.optimizer.defaults["lr"]))]
-        if "weight_decay" in self.optimizer.defaults:
-            optimizer_props += [("wd", str(self.optimizer.defaults["weight_decay"]))]
-        if "momentum" in self.optimizer.defaults:
-            optimizer_props += [("momentum", str(self.optimizer.defaults["momentum"]))]
-        result.append(standard_repr(self.optimizer.__class__.__name__, optimizer_props))
-        if self.scheduler is not None:
-            result.append(
-                standard_repr(
-                    "scheduler",
-                    [
-                        ("steps", str(self.scheduler.milestones)),
-                        ("gamma", str(self.scheduler.gamma)),
-                    ],
-                )
-            )
-
-        return "-".join(result)
+        self.run_folder = self.experiment_folder / str(self.run_number)
+        self.tb_folder = self.tb_root / self.exp_name / str(self.run_number)
+        self.writer = SummaryWriter(str(self.tb_folder))
 
     # noinspection PyMethodMayBeStatic
     def extra_info_for_run(self) -> Optional[dict]:
         return None
 
     def _save_info_of_run(self):
-        # todo: move away from string to dictionary.
-        info = {
-            "exp_name": self.exp_name,
-            "train_db": self.train_db.json_repr(),
-            "model": self.model.json_repr(),
-            "training": self._get_training_repr(),
-            "git_hash": get_git_commit_hash(),
-            "datetime": str(datetime.datetime.now()),
-            "random-seed": str(self.seed),
-            "call": " ".join(sys.argv),
-            "clip_grad_norm": self.clip_grad_norm,
-        }
-
         extra_info = self.extra_info_for_run()
-        if extra_info is not None:
-            info.update(extra_info)
 
-        with open(os.path.join(self.run_folder, "info.json"), "w") as f:
-            jdump(info, f, sort_keys=True, indent=4)
+        config_dump = self.cfg.dump()
+
+        final_value = """Time: {time}
+        Command: {command}
+        Git hash: {hash}
+        -----------------------------------------
+        {config}
+        """
+
+        result = final_value.format(
+            time=str(datetime.datetime.now()),
+            command=" ".join(sys.argv),
+            hash=get_git_commit_hash(),
+            config=config_dump,
+        )
+
+        if extra_info:
+            result += """-----------------------------------------
+            {extra}
+            """.format(
+                extra=extra_info
+            )
+
+        with open(self.run_folder / Path("info.txt"), "w") as f:
+            f.write(result)
 
         # Add the info to tensorboard for easier observation.
-        self.writer.add_text("info.json", jdumps(info, sort_keys=True, indent=4))
+        self.writer.add_text("info.txt", result)
 
     def save_run_report(
         self, report: str, name: str = "report", extension: str = "txt"
     ):
-        with open(os.path.join(self.run_folder, "%s.%s" % (name, extension)), "w") as f:
+        with open(self.run_folder / Path("%s.%s" % (name, extension)), "w") as f:
             f.write(report)
 
     def save_fig(self, fig: plt.Figure, name: str = "figure"):
-        fig.savefig(os.path.join(self.run_folder, "%s.png" % name))
+        fig.savefig(self.run_folder / ("%s.png" % name))
 
     def _mark_the_run(self):
-        os.makedirs(self.run_folder, exist_ok=True)
+        self.run_folder.mkdir(exist_ok=True)
         self._save_info_of_run()
 
-    def train(self, num_epochs: int):
-        self._mark_the_run()  # todo: is this the best place? my concern is with resuming, etc.
+    def train(self):
+        num_epochs = self.figure_num_epochs()
+        self._mark_the_run()
         print_with_time("Training for run number: {:d}".format(self.run_number))
-        epoch_range_start = 1 + self.epoch_num
+        epoch_range_start = self.epoch_num
         epoch_range = range(epoch_range_start, epoch_range_start + num_epochs)
+
+        # callback
         self.on_start_training(num_epochs)
+
         for epoch_num in epoch_range:
-            self.epoch_losses = []
+            # callback
+            self.on_start_epoch(epoch_num)
+
+            # resetting metrics
+            for n, m in self.metrics.items():
+                if self.metrics[n].report_average:
+                    m.reset_values()
+
+            # scheduler
             if self.scheduler is not None:
                 self.scheduler.step(epoch_num)
-            # todo: add parameters for shuffle
-            dataloader = DataLoader(
-                self.train_db,
-                batch_size=self.batch_size,
-                shuffle=True,
-                num_workers=self.num_workers,
-                collate_fn=self.train_db.collate_fn,
-            )
-            self.on_start_epoch(epoch_num)
-            for batch in tqdm(dataloader):
-                self.model.train()
 
-                losses = self.train_1_batch(batch)
-                self.minibatch_losses = losses
-                self.epoch_losses.append(losses)
+            # training for 1 epoch
+            dataloader = self.create_train_dataloader()
+            self.train_1_epoch(epoch_num, dataloader)
 
-                self.iter_num += 1
-            self.epoch_num = epoch_num
-            self.on_finish_epoch(epoch_num, self.epoch_losses)
-            if self.evaluators is not None and len(self.evaluators) > 0:
-                results = []
+            # saving
+            if (epoch_num + 1) % self.save_every == 0:
+                self.save_training()
+
+            # evaluation
+            if (epoch_num + 1) % self.eval_every == 0:
+                eval_results = []
                 for evaluator in self.evaluators:
-                    results.append(evaluator.evaluate())
-                self.evaluation_values.append(results)
-            print_with_time("epoch %d done." % epoch_num)
+                    eval_results.append(evaluator.evaluate())
+                self.track_end_of_epoch_metrics(eval_results, epoch_num)
 
-    def train_1_batch(self, batch: Tuple[Tensor, ...]) -> Tuple[Tensor, ...]:
+            # callback
+            self.on_finish_epoch(epoch_num)
+            self.epoch_num += 1
+
+        # callback
+        self.on_finish_training(num_epochs)
+
+    def train_1_epoch(self, epoch_number: int, dataloader: DataLoader):
+        print_with_time("Training epoch %d ..." % (epoch_number + 1))
+        self.model.to(self.device)
+        self.model.train()
+
+        for batch in tqdm(dataloader):
+            # callback
+            self.on_start_batch(self.iter_num, batch)
+
+            # train for 1 batch
+            batch_loss, forward_out = self._train_1_batch(self.iter_num, batch)
+
+            # update metrics for 1 batch
+            self.track_training_metrics(batch, forward_out, batch_loss, self.iter_num)
+
+            # call back
+            self.on_finish_batch(self.iter_num, batch, forward_out, batch_loss)
+            self.iter_num += 1
+
+    # noinspection PyUnusedLocal
+    def _train_1_batch(
+        self, iter_num: int, batch: GeneralBatch
+    ) -> Tuple[GeneralLoss, GeneralForwardOut]:
+        # callback
         self.on_start_batch(self.iter_num, batch)
+
+        # initial setup
         self.optimizer.zero_grad()
+        batch.to(self.device)
 
-        forward_input = self.model.prepare_forward_input_from_batch(batch)
-        for k, v in forward_input.items():
-            forward_input[k] = send_to_device(v, self.device)
-        forward_out = self.model.forward(**forward_input)
-        loss_input = self.model.prepare_loss_input(batch, forward_out)
-        for k, v in loss_input.items():
-            loss_input[k] = send_to_device(v, self.device)
-        losses = self.model.loss(**loss_input)
-        loss = self.model.get_backprop_loss(losses)
+        # forward pass
+        forward_out = self.model.forward(batch)
+        loss = self.model.loss(batch, forward_out)
 
-        self.writer.add_scalar("loss/main", loss.item(), global_step=self.iter_num)
-        loss.backward()
+        # backward pass
+        loss.main.backward()
 
         # optional gradient clipping
         if self.clip_grad_norm is not None:
-            for param_set in self.model.get_params(0):
-                clip_grad_norm_(param_set["params"], max_norm=self.clip_grad_norm)
+            clip_grad_norm_(self.model.parameters(), max_norm=self.clip_grad_norm)
 
-        # noinspection PyArgumentList
+        # optimizer step
         self.optimizer.step()
 
-        self.on_finish_batch(self.iter_num, batch, losses, forward_out)
-        return losses
+        # callback
+        self.on_finish_batch(self.iter_num, batch, forward_out, loss)
 
-    def __repr__(self) -> str:
-        return "train_db({tdb})-model({m})-training({trng})".format(
-            tdb=self.train_db.__repr__(),
-            m=self.model.__repr__(),
-            trng=self._get_training_repr(),
-        )
+        return loss, forward_out
 
     def save_training(self):
+        print_with_time("Saving model ...")
         self.checkpoint_this(MODEL_FILE_NAME, self.model.state_dict(), torch_save=True)
         self.checkpoint_this(
             OPTIMIZER_FILE_NAME, self.optimizer.state_dict(), torch_save=True
@@ -240,52 +236,48 @@ class Trainer(ABC):
 
     def load_training(self, run: int, epoch: int):
         """
-        epoch starts from 0, so, epoch=0 means load training from after epoch 0.
         todo: make epoch optional by looking for the largest value for it.
-        todo: this starts from 0 thing is unreasonable.
         """
         assert epoch >= 0
         self.run_number = run
-        self.epoch_num = epoch
+        self.epoch_num = epoch - 1  # todo: is this correct?
         if self.evaluators is not None:
             for ev in self.evaluators:
                 ev.set_epoch_number(self.epoch_num)
 
-        # fixme: this is not a good thing to do, we need a way to save the iter_num on disk maybe.
+        # this is not a good thing to do, we need a way to save the iter_num on disk maybe.
         self.iter_num = (1 + self.epoch_num) * len(self.train_db)
 
         self._set_run_folder()
         check_pointing_folder = self._get_checkpointing_folder()
 
-        model_file_name = os.path.join(
-            check_pointing_folder, "%s.%s" % (MODEL_FILE_NAME, TORCH_EXT)
+        model_file_name = check_pointing_folder / (
+            "%s.%s" % (MODEL_FILE_NAME, TORCH_EXT)
         )
         self.model.load_state_dict(torch.load(model_file_name))
 
-        optimizer_file_name = os.path.join(
-            check_pointing_folder, "%s.%s" % (OPTIMIZER_FILE_NAME, TORCH_EXT)
+        optimizer_file_name = check_pointing_folder / (
+            "%s.%s" % (OPTIMIZER_FILE_NAME, TORCH_EXT)
         )
         self.optimizer.load_state_dict(torch.load(optimizer_file_name))
 
         if self.scheduler is not None:
-            scheduler_file_name = os.path.join(
-                check_pointing_folder, "%s.%s" % (SCHEDULER_FILE_NAME, TORCH_EXT)
+            scheduler_file_name = check_pointing_folder / (
+                "%s.%s" % (SCHEDULER_FILE_NAME, TORCH_EXT)
             )
             self.scheduler = torch.load(scheduler_file_name)
 
-    def _get_checkpointing_folder(self) -> str:
-        return os.path.join(self.run_folder, str(self.epoch_num))
+    def _get_checkpointing_folder(self) -> Path:
+        return self.run_folder / str(self.epoch_num + 1)
 
     def checkpoint_this(self, name: str, thing, torch_save: bool = False):
         check_pointing_folder = self._get_checkpointing_folder()
-        os.makedirs(check_pointing_folder, exist_ok=True)
+        check_pointing_folder.mkdir(exist_ok=True)
         if torch_save:
-            file_name = os.path.join(check_pointing_folder, "%s.%s" % (name, TORCH_EXT))
+            file_name = check_pointing_folder / Path("%s.%s" % (name, TORCH_EXT))
             torch.save(thing, file_name)
         else:
-            file_name = os.path.join(
-                check_pointing_folder, "%s.%s" % (name, PICKLE_EXT)
-            )
+            file_name = check_pointing_folder / Path("%s.%s" % (name, PICKLE_EXT))
             with open(file_name, "wb") as f:
                 pdump(thing, f)
 
@@ -295,19 +287,19 @@ class Trainer(ABC):
     def on_start_epoch(self, epoch_num: int):
         pass
 
-    def on_start_batch(self, iter_num: int, batch: Tuple[Tensor, ...]):
+    def on_start_batch(self, iter_num: int, batch: GeneralBatch):
         pass
 
     def on_finish_batch(
         self,
         iter_num: int,
-        batch: Tuple[Tensor, ...],
-        losses: Tuple[Tensor, ...],
-        forward_out: Tuple[Tensor, ...],
+        batch: GeneralBatch,
+        forward_out: GeneralForwardOut,
+        loss: GeneralLoss,
     ):
         pass
 
-    def on_finish_epoch(self, epoch_num: int, epoch_losses: List[Tuple[Tensor, ...]]):
+    def on_finish_epoch(self, epoch_num: int):
         pass
 
     def on_finish_training(self, num_epochs: int):
@@ -316,13 +308,98 @@ class Trainer(ABC):
     def _figure_run_number(self) -> int:
         # fixme: this is not thread safe!
         max_run = 0
-        for f in os.listdir(self.experiment_folder):
-            if os.path.isdir(os.path.join(self.experiment_folder, f)):
+        for f in self.experiment_folder.iterdir():
+            if (self.experiment_folder / f).is_dir():
                 try:
-                    f = int(f)
+                    f = int(str(f))
                 except ValueError:
                     continue
                 if f > max_run:
                     max_run = f
 
         return max_run + 1
+
+    def figure_root(self) -> Path:
+        raise NotImplementedError
+
+    def figure_optimizer(self) -> Optimizer:
+        raise NotImplementedError
+
+    def figure_scheduler(self) -> Optional[Scheduler]:
+        raise NotImplementedError
+
+    def figure_num_epochs(self) -> int:
+        raise NotImplementedError
+
+    def create_train_dataloader(self) -> DataLoader:
+        """
+        If you want to overfit your model, you have to implement it here.
+        """
+        raise NotImplementedError
+
+    def update_trainer_using_config(self):
+        """
+        This is called at the end of init.
+        So change the implementation if you like.
+        """
+        pass
+
+    # noinspection PyMethodMayBeStatic
+    def figure_clip_grad_norm(self) -> Optional[float]:
+        """
+        TODO: Think about removing this and adding it as an optional hook.
+        Return a positive value if you want gradient clipping.
+        Return None is you don't want gradient clipping.
+        """
+        return None
+
+    def create_metrics(self) -> Dict[str, Union[ScalarMetric, ScalarMetricCollection]]:
+        """
+        By default we create a report average metric for the main loss.
+        Also  a non-report average metric for each evaluator.
+        """
+        default_loss_metric = ScalarMetric(self.writer, "loss/main")
+        metrics = {self.main_loss_metric_name: default_loss_metric}
+
+        for i, evaluator in enumerate(self.evaluators):
+            metrics[
+                self.eval_metric_name_format.format(i + 1)
+            ] = ScalarMetricCollection(
+                self.writer, evaluator.get_name(), report_average=False
+            )
+
+        return metrics
+
+    # noinspection PyUnusedLocal
+    def track_training_metrics(
+        self,
+        batch: GeneralBatch,
+        forward_out: GeneralForwardOut,
+        loss: GeneralLoss,
+        iter_num: int,
+    ):
+        """
+        By default we will update the loss.
+        """
+        self.metrics[self.main_loss_metric_name].add_value(
+            value=loss.main.item(), step=iter_num
+        )
+
+    def track_end_of_epoch_metrics(
+        self, eval_results: List[GeneralEvaluatorResult], epoch_num: int
+    ):
+        """
+        By default we will update the loss for average reporting. Also if any evaluator is provided
+        they will also be updated.
+        """
+        # for the main loss
+        self.metrics[self.main_loss_metric_name].epoch_finished(epoch_num=epoch_num)
+
+        # for each evaluator
+        for i, (evaluator, eval_result) in enumerate(
+            zip(self.evaluators, eval_results)
+        ):
+            # noinspection PyTypeChecker
+            self.metrics[self.eval_metric_name_format.format(i + 1)].add_value(
+                value=eval_result, step=(epoch_num + 1)
+            )

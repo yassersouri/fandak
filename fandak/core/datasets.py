@@ -45,4 +45,4 @@ class Dataset(tDataset):
         """
         Each dataset class should implement its own collate function.
         """
-        raise NotImplementedError
+        return GeneralBatch.default_collate(items)

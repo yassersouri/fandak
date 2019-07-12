@@ -1,5 +1,5 @@
 import random
-from typing import Union, Collection, List, Callable, Tuple
+from typing import Union, Collection, List, Callable, Optional
 
 import numpy as np
 import torch
@@ -73,9 +73,13 @@ class OverfitSampler(Sampler):
 
 class GeneralDataClass:
     def filter_attributes(
-        self, the_filter: Callable[["GeneralDataClass", str], bool]
+        self,
+        the_filter: Callable[["GeneralDataClass", str], bool],
+        initial_attr_list: Optional[Collection[str]] = None,
     ) -> List[str]:
-        return [a for a in dir(self) if the_filter(self, a)]
+        if initial_attr_list is None:
+            initial_attr_list = dir(self)
+        return [a for a in initial_attr_list if the_filter(self, a)]
 
     def get_attribute_names(self) -> List[str]:
         return self.filter_attributes(
