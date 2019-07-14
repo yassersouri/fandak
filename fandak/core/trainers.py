@@ -21,6 +21,17 @@ from fandak.core.models import Model, GeneralLoss, GeneralForwardOut
 from fandak.utils.metrics import ScalarMetric, ScalarMetricCollection
 from fandak.utils.misc import get_git_commit_hash, print_with_time
 
+RUN_INFO_TEMPLATE = """Time: {time}
+Command: {command}
+Git hash: {hash}
+-----------------------------------------
+{config}
+"""
+
+RUN_EXTRA_TEMPLATE = """-----------------------------------------
+{extra}
+"""
+
 TORCH_EXT = "trc"
 PICKLE_EXT = "pkl"
 MODEL_FILE_NAME = "model"
@@ -89,12 +100,7 @@ class Trainer(ABC):
 
         config_dump = self.cfg.dump()
 
-        final_value = """Time: {time}
-        Command: {command}
-        Git hash: {hash}
-        -----------------------------------------
-        {config}
-        """
+        final_value = RUN_INFO_TEMPLATE
 
         result = final_value.format(
             time=str(datetime.datetime.now()),
@@ -104,17 +110,16 @@ class Trainer(ABC):
         )
 
         if extra_info:
-            result += """-----------------------------------------
-            {extra}
-            """.format(
-                extra=extra_info
-            )
+            result += RUN_EXTRA_TEMPLATE.format(extra=extra_info)
 
         with open(self.run_folder / Path("info.txt"), "w") as f:
             f.write(result)
 
+        # fixme: there is still a lot of problems with viewing here
+        result_markdown_linebreak_fixed = result.replace("\n", "  \n")
+
         # Add the info to tensorboard for easier observation.
-        self.writer.add_text("info.txt", result)
+        self.writer.add_text("info.txt", result_markdown_linebreak_fixed)
 
     def save_run_report(
         self, report: str, name: str = "report", extension: str = "txt"
