@@ -49,7 +49,7 @@ class ScalarMetricCollection:
         self.values = defaultdict(list)
         self.average_base_tag = "training_average/%s" % self.base_name
 
-    def add_value(self, dataclass: GeneralDataClass, step: int):
+    def add_value(self, value: GeneralDataClass, step: int):
         def is_scalar_like(ds: GeneralDataClass, an: str) -> bool:
             a = getattr(ds, an)
             if isinstance(a, Tensor):  # is Tensor
@@ -63,15 +63,15 @@ class ScalarMetricCollection:
             else:
                 return False
 
-        loss_like_attr_names = dataclass.filter_attributes(
-            is_scalar_like, initial_attr_list=dataclass.get_attribute_names()
+        loss_like_attr_names = value.filter_attributes(
+            is_scalar_like, initial_attr_list=value.get_attribute_names()
         )
 
         for attr_name in loss_like_attr_names:
             tag_name = "{base_name}/{attr_name}".format(
                 base_name=self.base_name, attr_name=attr_name
             )
-            attr = getattr(dataclass, attr_name)
+            attr = getattr(value, attr_name)
             if isinstance(attr, Tensor):
                 value = attr.item()
             else:
