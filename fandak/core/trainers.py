@@ -304,9 +304,9 @@ class Trainer(ABC):
         # fixme: this is not thread safe!
         max_run = 0
         for f in self.experiment_folder.iterdir():
-            if (self.experiment_folder / f).is_dir():
+            if f.is_dir():
                 try:
-                    f = int(str(f))
+                    f = int(str(f.name))
                 except ValueError:
                     continue
                 if f > max_run:
