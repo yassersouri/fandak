@@ -8,10 +8,11 @@ from yacs.config import CfgNode
 
 from fandak.core.datasets import Dataset, GeneralBatch
 from fandak.core.models import Model, GeneralForwardOut
+from fandak.utils.torch import GeneralDataClass
 
 
 @dataclass
-class GeneralEvaluatorResult:
+class GeneralEvaluatorResult(GeneralDataClass):
     pass
 
 
