@@ -55,7 +55,6 @@ class Trainer(ABC):
             evaluators = []
         self.evaluators = evaluators  # type: Iterable[Evaluator]
 
-        self.shuffle = True
         self.save_every = 1
         self.eval_every = 1
 
@@ -70,7 +69,7 @@ class Trainer(ABC):
         self.iter_num = 0
 
         self.experiment_folder = self.root / self.exp_name
-        self.experiment_folder.mkdir(exist_ok=True)
+        self.experiment_folder.mkdir(exist_ok=True, parents=True)
         self.run_number = self._figure_run_number()
         self._set_run_folder()
         self.metrics = self.create_metrics()
@@ -127,7 +126,7 @@ class Trainer(ABC):
         fig.savefig(self.run_folder / ("%s.png" % name))
 
     def _mark_the_run(self):
-        self.run_folder.mkdir(exist_ok=True)
+        self.run_folder.mkdir(exist_ok=True, parents=True)
         self._save_info_of_run()
 
     def train(self):
@@ -268,7 +267,7 @@ class Trainer(ABC):
 
     def checkpoint_this(self, name: str, thing, torch_save: bool = False):
         check_pointing_folder = self._get_checkpointing_folder()
-        check_pointing_folder.mkdir(exist_ok=True)
+        check_pointing_folder.mkdir(exist_ok=True, parents=True)
         if torch_save:
             file_name = check_pointing_folder / Path("%s.%s" % (name, TORCH_EXT))
             torch.save(thing, file_name)
