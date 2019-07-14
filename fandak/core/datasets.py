@@ -3,6 +3,7 @@ from typing import List
 
 from torch import Tensor
 from torch.utils.data import Dataset as tDataset
+
 # noinspection PyUnresolvedReferences
 from torch.utils.data.dataloader import default_collate
 from yacs.config import CfgNode
