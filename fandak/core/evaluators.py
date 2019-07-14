@@ -70,7 +70,7 @@ class Evaluator(ABC):
     def on_start_eval(self):
         pass
 
-    def on_finish_eval(self):
+    def on_finish_eval(self) -> GeneralEvaluatorResult:
         raise NotImplementedError
 
     def set_storage(self):
