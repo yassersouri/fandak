@@ -42,6 +42,5 @@ class MNISTClassification(Dataset):
         batch = Batch(x=img.view(-1), y=torch.tensor(target).long())
         return batch
 
-    @staticmethod
-    def collate_fn(items: List[GeneralBatch]) -> GeneralBatch:
-        pass
+    def collate_fn(self, items: List[Batch]) -> Batch:
+        return Batch.default_collate(items)

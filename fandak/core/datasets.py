@@ -3,7 +3,6 @@ from typing import List
 
 from torch import Tensor
 from torch.utils.data import Dataset as tDataset
-
 # noinspection PyUnresolvedReferences
 from torch.utils.data.dataloader import default_collate
 from yacs.config import CfgNode
@@ -40,9 +39,9 @@ class Dataset(tDataset):
     def __getitem__(self, item: int) -> GeneralBatch:
         raise NotImplementedError
 
-    @staticmethod
-    def collate_fn(items: List[GeneralBatch]) -> GeneralBatch:
+    def collate_fn(self, items: List[GeneralBatch]) -> GeneralBatch:
         """
         Each dataset class should implement its own collate function.
+        Could be as simple as `return GeneralBatch.default_collate(items)`
         """
-        return GeneralBatch.default_collate(items)
+        raise NotImplementedError
