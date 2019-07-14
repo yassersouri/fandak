@@ -145,6 +145,8 @@ class Trainer(ABC):
         self.on_start_training(num_epochs)
 
         for epoch_num in epoch_range:
+            self.epoch_num = epoch_num
+
             # callback
             self.on_start_epoch(epoch_num)
 
@@ -174,7 +176,6 @@ class Trainer(ABC):
 
             # callback
             self.on_finish_epoch(epoch_num)
-            self.epoch_num += 1
 
         # callback
         self.on_finish_training(num_epochs)
