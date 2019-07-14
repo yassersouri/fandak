@@ -12,7 +12,7 @@ from proj.datasets import Batch
 
 @dataclass
 class ForwardOut:
-    logits: Tensor
+    logits: Tensor  # [N x C]
 
 
 class MLPModel(Model):

@@ -1,32 +1,36 @@
-from torch.utils.data import DataLoader
+import torch
 
+from fandak.utils import set_seed
 from fandak.utils.config import update_config
 from proj.config import get_config_defaults
-from proj.datasets import MNISTClassification, Batch
+from proj.datasets import MNISTClassification
+from proj.evaluators import ValidationEvaluator
 from proj.models import MLPModel
+from proj.trainers import SimpleTrainer
 
 
 def main():
     cfg = update_config(get_config_defaults())
     print(cfg)
 
-    train_db = MNISTClassification(cfg, train=True)
-    # test_db = MNISTClassification(cfg, train=False)
+    set_seed(cfg.system.seed)
+    device = torch.device(cfg.system.device)
 
-    train_loader = DataLoader(train_db, batch_size=2, collate_fn=Batch.default_collate)
-    batch = train_loader.__iter__().__next__()
+    train_db = MNISTClassification(cfg, train=True)
+    test_db = MNISTClassification(cfg, train=False)
 
     if cfg.model.name == "MLP":
         model = MLPModel(cfg)
     else:
         raise Exception("Invalid model name (%s)" % cfg.model.name)
 
-    forward_out = model.forward(batch)
-    loss = model.loss(batch, forward_out)
+    evaluators = [ValidationEvaluator(cfg, test_db, model, device)]
+    trainer = SimpleTrainer(
+        cfg, "first-experiment", train_db, model, device, evaluators
+    )
 
-    model.get_backprop_loss(loss).backward()
-
-    print(batch)
+    trainer.train()
+    trainer.save_training()
 
 
 if __name__ == "__main__":
