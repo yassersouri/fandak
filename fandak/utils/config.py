@@ -35,4 +35,6 @@ def update_config(default_config: CfgNode) -> CfgNode:
     if args.set_cfgs is not None:
         default_config.merge_from_list(args.set_cfgs)
 
+    default_config.freeze()
+
     return default_config
