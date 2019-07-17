@@ -28,6 +28,7 @@ def default_parse_args() -> argparse.Namespace:
 def update_config(default_config: CfgNode) -> CfgNode:
     """
     This is useful for updating your config from CLI inputs, whether by a new config file or by --set.
+    It will freeze the default config to prevent code smell.
     """
     args = default_parse_args()
     if args.cfg_file is not None:
