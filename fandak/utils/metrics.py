@@ -49,7 +49,7 @@ class ScalarMetricCollection:
         self.values = defaultdict(list)
         self.average_base_tag = "training_average/%s" % self.base_name
 
-    def add_value(self, value: GeneralDataClass, step: int):
+    def add_value(self, dc_value: GeneralDataClass, step: int):
         def is_scalar_like(ds: GeneralDataClass, an: str) -> bool:
             a = getattr(ds, an)
             if isinstance(a, Tensor):  # is Tensor
@@ -63,21 +63,21 @@ class ScalarMetricCollection:
             else:
                 return False
 
-        loss_like_attr_names = value.filter_attributes(
-            is_scalar_like, initial_attr_list=value.get_attribute_names()
+        loss_like_attr_names = dc_value.filter_attributes(
+            is_scalar_like, initial_attr_list=dc_value.get_attribute_names()
         )
 
         for attr_name in loss_like_attr_names:
             tag_name = "{base_name}/{attr_name}".format(
                 base_name=self.base_name, attr_name=attr_name
             )
-            attr = getattr(value, attr_name)
+            attr = getattr(dc_value, attr_name)
             if isinstance(attr, Tensor):
                 value = attr.item()
             else:
                 value = attr
             self.writer.add_scalar(tag_name, scalar_value=value, global_step=step)
-            self.values[attr_name].append(value)
+            self.values[attr_name].append(dc_value)
 
     def epoch_finished(self, epoch_num: int):
         if self.report_average:

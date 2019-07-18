@@ -382,7 +382,7 @@ class Trainer(ABC):
         """
         By default we will update the loss.
         """
-        self.metrics[self.main_loss_metric_name].add_value(value=loss, step=iter_num)
+        self.metrics[self.main_loss_metric_name].add_value(dc_value=loss, step=iter_num)
 
     def track_end_of_epoch_metrics(
         self, eval_results: List[GeneralEvaluatorResult], epoch_num: int
@@ -400,5 +400,5 @@ class Trainer(ABC):
         ):
             # noinspection PyTypeChecker
             self.metrics[self.eval_metric_name_format.format(i + 1)].add_value(
-                value=eval_result, step=(epoch_num + 1)
+                dc_value=eval_result, step=(epoch_num + 1)
             )
