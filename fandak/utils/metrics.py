@@ -77,7 +77,7 @@ class ScalarMetricCollection:
             else:
                 value = attr
             self.writer.add_scalar(tag_name, scalar_value=value, global_step=step)
-            self.values[attr_name].append(dc_value)
+            self.values[attr_name].append(value)
 
     def epoch_finished(self, epoch_num: int):
         if self.report_average:
