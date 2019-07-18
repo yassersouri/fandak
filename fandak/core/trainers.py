@@ -18,7 +18,7 @@ from yacs.config import CfgNode
 from fandak.core.datasets import Dataset, GeneralBatch
 from fandak.core.evaluators import Evaluator, GeneralEvaluatorResult
 from fandak.core.models import Model, GeneralLoss, GeneralForwardOut
-from fandak.utils.metrics import ScalarMetric, ScalarMetricCollection
+from fandak.utils.metrics import ScalarMetricCollection
 from fandak.utils.misc import get_git_commit_hash, print_with_time
 
 RUN_INFO_TEMPLATE = """Time: {time}
@@ -354,12 +354,12 @@ class Trainer(ABC):
         """
         return None
 
-    def create_metrics(self) -> Dict[str, Union[ScalarMetric, ScalarMetricCollection]]:
+    def create_metrics(self) -> Dict[str, ScalarMetricCollection]:
         """
         By default we create a report average metric for the main loss.
         Also  a non-report average metric for each evaluator.
         """
-        default_loss_metric = ScalarMetric(self.writer, "loss/main")
+        default_loss_metric = ScalarMetricCollection(self.writer, "loss")
         metrics = {self.main_loss_metric_name: default_loss_metric}
 
         for i, evaluator in enumerate(self.evaluators):
@@ -382,9 +382,7 @@ class Trainer(ABC):
         """
         By default we will update the loss.
         """
-        self.metrics[self.main_loss_metric_name].add_value(
-            value=loss.main.item(), step=iter_num
-        )
+        self.metrics[self.main_loss_metric_name].add_value(value=loss, step=iter_num)
 
     def track_end_of_epoch_metrics(
         self, eval_results: List[GeneralEvaluatorResult], epoch_num: int
