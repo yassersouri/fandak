@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 from unittest import TestCase
 
+import torch
+from torch import Tensor
+
 from fandak.utils.torch import GeneralDataClass
 
 
@@ -41,3 +44,16 @@ class TestGeneralDataClass(TestCase):
             lambda dc, a: a.startswith("a"), initial_attr_list=x.get_attribute_names()
         )
         self.assertListEqual(["a", "aa"], sorted(list_of_attr))
+
+    def test_pin_memory(self):
+        @dataclass
+        class T(GeneralDataClass):
+            a: int
+            b: Tensor
+            c: Tensor
+
+        x = T(a=1, b=torch.zeros(1), c=torch.ones(1))
+        x.pin_memory()
+
+        self.assertTrue(x.b.is_pinned())
+        self.assertTrue(x.c.is_pinned())
