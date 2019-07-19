@@ -101,3 +101,13 @@ class GeneralDataClass:
             attr = getattr(self, attr_name)
             if isinstance(attr, torch.Tensor):
                 setattr(self, attr_name, attr.item())
+
+    def pin_memory(self) -> "GeneralDataClass":
+        """
+        A general implementation of pin_memory. If the attribute type is Tensor, it will call pin_memory on it.
+        """
+        for attr_name in self.get_attribute_names():
+            attr = getattr(self, attr_name)
+            if isinstance(attr, torch.Tensor):
+                setattr(self, attr_name, attr.pin_memory())
+        return self
