@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="fandak",
-    version="0.0.5",
+    version="0.0.6",
     author="Yasser Souri",
     author_email="yassersouri@gmail.com",
     description="A Framework for Deep Learning Research in PyTorch.",

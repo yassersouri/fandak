@@ -2,7 +2,7 @@
 
 ## DataParallel
 
- - [ ] Create subclass of nn.DataParallel to make DataParallel work for GeneralDataClass
+ - [x] Create subclass of nn.DataParallel to make DataParallel work for GeneralDataClass
 
 
 ## Tests
