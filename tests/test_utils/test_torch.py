@@ -53,7 +53,8 @@ class TestGeneralDataClass(TestCase):
             c: Tensor
 
         x = T(a=1, b=torch.zeros(1), c=torch.ones(1))
-        x.pin_memory()
+        if torch.cuda.is_available():
+            x.pin_memory()
 
-        self.assertTrue(x.b.is_pinned())
-        self.assertTrue(x.c.is_pinned())
+            self.assertTrue(x.b.is_pinned())
+            self.assertTrue(x.c.is_pinned())
