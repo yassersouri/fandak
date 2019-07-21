@@ -86,11 +86,17 @@ class GeneralDataClass:
             lambda gdc, a: not a.startswith("__") and not callable(getattr(gdc, a))
         )
 
+    def get_tensor_attributes(self) -> List[str]:
+        return self.filter_attributes(
+            lambda gdc, a: not a.startswith("__")
+            and not callable(getattr(gdc, a))
+            and isinstance(getattr(gdc, a), torch.Tensor)
+        )
+
     def to(self, device: torch.device):
-        for attr_name in self.get_attribute_names():
+        for attr_name in self.get_tensor_attributes():
             attr = getattr(self, attr_name)
-            if isinstance(attr, torch.Tensor):
-                setattr(self, attr_name, attr.to(device))
+            setattr(self, attr_name, attr.to(device))
 
     def item(self):
         """
