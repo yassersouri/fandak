@@ -4,6 +4,8 @@ import torch.nn as nn
 # noinspection PyProtectedMember
 from torch.nn.parallel._functions import Scatter, Gather
 
+from fandak.core.datasets import GeneralBatch
+from fandak.core.models import GeneralForwardOut
 from fandak.utils.torch import GeneralDataClass
 
 
@@ -112,3 +114,6 @@ class DataParallel(nn.DataParallel):
 
     def gather(self, outputs, output_device):
         return gather(outputs, output_device, dim=self.dim)
+
+    def loss(self, batch: GeneralBatch, forward_out: GeneralForwardOut):
+        return self.module.loss(batch=batch, forward_out=forward_out)
