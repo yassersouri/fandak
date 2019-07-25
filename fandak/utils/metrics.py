@@ -41,10 +41,15 @@ class ScalarMetric:
 
 class ScalarMetricCollection:
     def __init__(
-        self, writer: SummaryWriter, base_name: str, report_average: bool = True
+        self,
+        writer: SummaryWriter,
+        base_name: str,
+        print_each_iter: bool = False,
+        report_average: bool = True,
     ):
         self.writer = writer
         self.base_name = base_name
+        self.print_each_iter = print_each_iter
         self.report_average = report_average
         self.values = defaultdict(list)
         self.average_base_tag = "training_average/%s" % self.base_name
@@ -78,6 +83,8 @@ class ScalarMetricCollection:
                 value = attr
             self.writer.add_scalar(tag_name, scalar_value=value, global_step=step)
             self.values[attr_name].append(value)
+            if self.print_each_iter:
+                print_with_time("(step %d) %s: %f" % (step, tag_name, value))
 
     def epoch_finished(self, epoch_num: int):
         if self.report_average:

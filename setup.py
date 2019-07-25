@@ -1,14 +1,15 @@
 import setuptools
+from fandak import __version__
 
 with open("README.md", "r") as f:
     long_description = f.read()
 
 setuptools.setup(
     name="fandak",
-    version="0.0.7",
+    version=__version__,
     author="Yasser Souri",
     author_email="yassersouri@gmail.com",
-    description="A Framework for Deep Learning Research in PyTorch.",
+    description="A Framework for Research Using PyTorch",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/yassersouri/fandak",

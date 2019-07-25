@@ -359,14 +359,19 @@ class Trainer(ABC):
         By default we create a report average metric for the main loss.
         Also  a non-report average metric for each evaluator.
         """
-        default_loss_metric = ScalarMetricCollection(self.writer, "loss")
+        default_loss_metric = ScalarMetricCollection(
+            self.writer, "loss", print_each_iter=False
+        )
         metrics = {self.main_loss_metric_name: default_loss_metric}
 
         for i, evaluator in enumerate(self.evaluators):
             metrics[
                 self.eval_metric_name_format.format(i + 1)
             ] = ScalarMetricCollection(
-                self.writer, evaluator.get_name(), report_average=False
+                self.writer,
+                evaluator.get_name(),
+                print_each_iter=True,
+                report_average=False,
             )
 
         return metrics
