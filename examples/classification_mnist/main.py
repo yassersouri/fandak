@@ -26,7 +26,7 @@ def main():
 
     evaluators = [ValidationEvaluator(cfg, test_db, model, device)]
     trainer = SimpleTrainer(
-        cfg, "first-experiment", train_db, model, device, evaluators
+        cfg, cfg.experiment_name, train_db, model, device, evaluators
     )
 
     trainer.train()

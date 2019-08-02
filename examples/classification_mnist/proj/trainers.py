@@ -1,12 +1,14 @@
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Any, Dict
 
-from torch.optim import Adam
+from torch.optim import Adam, SGD
 from torch.optim.optimizer import Optimizer
+from torch.optim.lr_scheduler import StepLR, MultiStepLR, ReduceLROnPlateau
 from torch.utils.data import DataLoader
 
 from fandak import Trainer
 from fandak.core.trainers import Scheduler
+from .evaluators import TrainEvaluationResult
 
 
 class SimpleTrainer(Trainer):
@@ -18,12 +20,38 @@ class SimpleTrainer(Trainer):
         learning_rate = self.cfg.trainer.optimizer.lr
 
         if optimizer_name == "Adam":
-            return Adam(self.model.parameters(), lr=learning_rate)
+            return Adam(self.model.parameters(), lr=learning_rate, amsgrad=True)
+        elif optimizer_name == "SGD":
+            return SGD(self.model.parameters(), lr=learning_rate)
         else:
             raise Exception("Invalid optimizer name (%s)" % optimizer_name)
 
-    def figure_scheduler(self) -> Optional[Scheduler]:
-        return None
+    def figure_scheduler(self, optimizer: Optimizer) -> Optional[Scheduler]:
+        scheduler_name = self.cfg.trainer.scheduler.name
+        scheduler_step = self.cfg.trainer.scheduler.step
+        scheduler_steps = self.cfg.trainer.scheduler.steps
+        gamma = self.cfg.trainer.scheduler.gamma
+
+        if scheduler_name == "":
+            return None
+        elif scheduler_name == "Step":
+            return StepLR(optimizer=optimizer, step_size=scheduler_step, gamma=gamma)
+        elif scheduler_name == "MultiStep":
+            return MultiStepLR(optimizer=optimizer, milestones=scheduler_steps, gamma=gamma)
+        elif scheduler_name == "ReduceOnPlateau":
+            return ReduceLROnPlateau(optimizer=optimizer, mode="min", factor=gamma, patience=2, verbose=True)
+        else:
+            raise Exception("Invalid scheduler name (%s)" % scheduler_name)
+
+    def figure_scheduler_input(
+        self, eval_results: List[TrainEvaluationResult]
+    ) -> Dict[str, Any]:
+        scheduler_name = self.cfg.trainer.scheduler.name
+
+        if scheduler_name == "ReduceOnPlateau":
+            return {"metrics": eval_results[0].average_loss}
+        else:
+            return {}
 
     def figure_num_epochs(self) -> int:
         return self.cfg.trainer.num_epochs
