@@ -3,12 +3,12 @@ import sys
 from abc import ABC
 from pathlib import Path
 from pickle import dump as pdump
-from typing import Optional, Tuple, List, Union, Iterable, Dict
+from typing import Optional, Tuple, List, Union, Iterable, Dict, Any
 
 import matplotlib.pylab as plt
 import torch
 from torch.nn.utils import clip_grad_norm_
-from torch.optim.lr_scheduler import MultiStepLR, StepLR, LambdaLR
+from torch.optim.lr_scheduler import MultiStepLR, StepLR, LambdaLR, ReduceLROnPlateau
 from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
@@ -38,7 +38,7 @@ MODEL_FILE_NAME = "model"
 OPTIMIZER_FILE_NAME = "optimizer"
 SCHEDULER_FILE_NAME = "scheduler"
 
-Scheduler = Union[MultiStepLR, StepLR, LambdaLR]
+Scheduler = Union[MultiStepLR, StepLR, LambdaLR, ReduceLROnPlateau]
 
 
 class Trainer(ABC):
@@ -67,11 +67,13 @@ class Trainer(ABC):
         self.evaluators = evaluators  # type: Iterable[Evaluator]
 
         self.save_every = 1
+        # if you use reduce on plateau scheduler then this should be 1
+        # because each epoch you need to have the evaluation value
         self.eval_every = 1
 
         self.root = self.figure_root()
         self.optimizer = self.figure_optimizer()
-        self.scheduler = self.figure_scheduler()
+        self.scheduler = self.figure_scheduler(self.optimizer)
         self.clip_grad_norm = self.figure_clip_grad_norm()
 
         self.tb_root = self.root / "TB"
@@ -155,10 +157,6 @@ class Trainer(ABC):
                 if self.metrics[n].report_average:
                     m.reset_values()
 
-            # scheduler
-            if self.scheduler is not None:
-                self.scheduler.step(epoch_num)
-
             # training for 1 epoch
             dataloader = self.create_train_dataloader()
             self.train_1_epoch(epoch_num, dataloader)
@@ -168,11 +166,16 @@ class Trainer(ABC):
                 self.save_training()
 
             # evaluation
+            eval_results = []
             if (epoch_num + 1) % self.eval_every == 0:
-                eval_results = []
                 for evaluator in self.evaluators:
                     eval_results.append(evaluator.evaluate())
                 self.track_end_of_epoch_metrics(eval_results, epoch_num)
+
+            # scheduler
+            if self.scheduler is not None:
+                # noinspection PyArgumentList
+                self.scheduler.step(**self.figure_scheduler_input(eval_results))
 
             # callback
             self.on_finish_epoch(epoch_num)
@@ -326,8 +329,20 @@ class Trainer(ABC):
     def figure_optimizer(self) -> Optimizer:
         raise NotImplementedError
 
-    def figure_scheduler(self) -> Optional[Scheduler]:
+    def figure_scheduler(self, optimizer: Optimizer) -> Optional[Scheduler]:
         raise NotImplementedError
+
+    # noinspection PyMethodMayBeStatic,PyUnusedLocal
+    def figure_scheduler_input(
+        self, eval_results: List[GeneralEvaluatorResult]
+    ) -> Dict[str, Any]:
+        """
+        If you want to use the on plateau lr_scheduler for example, then return something like
+        {"metrics": eval_results[0].eval_loss.item()}.
+        You should implement it as you like.
+        The default implementation will return empty dictionary.
+        """
+        return {}
 
     def figure_num_epochs(self) -> int:
         raise NotImplementedError
