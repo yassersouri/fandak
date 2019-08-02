@@ -37,9 +37,19 @@ class SimpleTrainer(Trainer):
         elif scheduler_name == "Step":
             return StepLR(optimizer=optimizer, step_size=scheduler_step, gamma=gamma)
         elif scheduler_name == "MultiStep":
-            return MultiStepLR(optimizer=optimizer, milestones=scheduler_steps, gamma=gamma)
+            return MultiStepLR(
+                optimizer=optimizer, milestones=scheduler_steps, gamma=gamma
+            )
         elif scheduler_name == "ReduceOnPlateau":
-            return ReduceLROnPlateau(optimizer=optimizer, mode="min", factor=gamma, patience=2, verbose=True)
+            return ReduceLROnPlateau(
+                optimizer=optimizer,
+                mode="min",
+                factor=gamma,
+                patience=2,
+                threshold=1e-3,
+                threshold_mode="abs",
+                verbose=True,
+            )
         else:
             raise Exception("Invalid scheduler name (%s)" % scheduler_name)
 

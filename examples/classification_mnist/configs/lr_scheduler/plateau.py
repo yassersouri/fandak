@@ -1,4 +1,4 @@
 cfg = {
     "experiment_name": "plateau_lrs",
-    "trainer": {"scheduler": {"name": "ReduceOnPlateau"}},
+    "trainer": {"num_epochs": 45, "scheduler": {"name": "ReduceOnPlateau"}},
 }
