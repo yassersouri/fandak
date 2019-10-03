@@ -1,8 +1,13 @@
 # TODO
 
+## Code
+
+ - [ ] Use f-strings instead of other kinds of python formating 
+
 ## Analyzer
 
  - [x] Save Average Training and Eval numbers on disk.
+ - [ ] Use steamlit to visualize somethings?
 
 
 ## Tests
