@@ -1,5 +1,7 @@
 from collections import defaultdict
 from numbers import Number
+from pathlib import Path
+from pickle import dump
 
 from torch import Tensor
 from torch.utils.tensorboard import SummaryWriter
@@ -8,51 +10,22 @@ from fandak.utils import print_with_time
 from fandak.utils.torch import GeneralDataClass
 
 
-class ScalarMetric:
-    # TODO: refactor to inherit ScalarMetricCollection
-    def __init__(self, writer: SummaryWriter, name: str, report_average: bool = True):
-        self.writer = writer
-        self.name = name
-        self.report_average = report_average
-        self.values = []
-        self.average_tag = "training_average/%s" % self.name
-
-    def add_value(self, value: float, step: int):
-        self.writer.add_scalar(tag=self.name, scalar_value=value, global_step=step)
-        self.values.append(value)
-
-    def epoch_finished(self, epoch_num: int):
-        average_value = self.average_value()
-        if self.report_average:
-            self.writer.add_scalar(
-                tag=self.average_tag,
-                scalar_value=average_value,
-                global_step=epoch_num + 1,
-            )
-            print_with_time("%s: %f" % (self.average_tag, average_value))
-        self.reset_values()
-
-    def reset_values(self):
-        self.values.clear()
-
-    def average_value(self) -> float:
-        return sum(self.values) / len(self.values)
-
-
 class ScalarMetricCollection:
     def __init__(
         self,
         writer: SummaryWriter,
+        root: Path,
         base_name: str,
         print_each_iter: bool = False,
         report_average: bool = True,
     ):
         self.writer = writer
+        self.root = root
         self.base_name = base_name
         self.print_each_iter = print_each_iter
         self.report_average = report_average
         self.values = defaultdict(list)
-        self.average_base_tag = "training_average/%s" % self.base_name
+        self.average_base_tag = f"training_average/{self.base_name}"
 
     def add_value(self, dc_value: GeneralDataClass, step: int):
         def is_scalar_like(ds: GeneralDataClass, an: str) -> bool:
@@ -73,9 +46,7 @@ class ScalarMetricCollection:
         )
 
         for attr_name in loss_like_attr_names:
-            tag_name = "{base_name}/{attr_name}".format(
-                base_name=self.base_name, attr_name=attr_name
-            )
+            tag_name = f"{self.base_name}/{attr_name}"
             attr = getattr(dc_value, attr_name)
             if isinstance(attr, Tensor):
                 value = attr.item()
@@ -84,19 +55,23 @@ class ScalarMetricCollection:
             self.writer.add_scalar(tag_name, scalar_value=value, global_step=step)
             self.values[attr_name].append(value)
             if self.print_each_iter:
-                print_with_time("(step %d) %s: %f" % (step, tag_name, value))
+                print_with_time(f"(step {step}) {tag_name}: {value}")
 
     def epoch_finished(self, epoch_num: int):
         if self.report_average:
+            average_values = {}
             for attr_name in self.values.keys():
                 average_value = self.average_value(attr_name)
-                tag_name = "{base_name}/{attr_name}".format(
-                    base_name=self.average_base_tag, attr_name=attr_name
-                )
+                average_values[attr_name] = average_value
+                tag_name = f"{self.average_base_tag}/{attr_name}"
                 self.writer.add_scalar(
                     tag=tag_name, scalar_value=average_value, global_step=epoch_num + 1
                 )
-                print_with_time("%s: %f" % (tag_name, average_value))
+                print_with_time(f"{tag_name}: {average_value}")
+            self.save(
+                dictionary=average_values,
+                name=Path(str(epoch_num + 1)) / self.base_name,
+            )
         self.reset_values()
 
     def reset_values(self):
@@ -105,3 +80,11 @@ class ScalarMetricCollection:
 
     def average_value(self, attr_name: str) -> float:
         return sum(self.values[attr_name]) / len(self.values[attr_name])
+
+    def save(self, dictionary: dict = None, name: str = None):
+        if dictionary is None:
+            dictionary = self.values
+        if name is None:
+            name = f"{self.base_name}"
+        with open(self.root / f"{name}.pkl", "wb") as f:
+            dump(dictionary, f)

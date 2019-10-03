@@ -1,8 +1,8 @@
 # TODO
 
-## DataParallel
+## Analyzer
 
- - [x] Create subclass of nn.DataParallel to make DataParallel work for GeneralDataClass
+ - [x] Save Average Training and Eval numbers on disk.
 
 
 ## Tests

@@ -375,7 +375,10 @@ class Trainer(ABC):
         Also  a non-report average metric for each evaluator.
         """
         default_loss_metric = ScalarMetricCollection(
-            self.writer, "loss", print_each_iter=False
+            writer=self.writer,
+            root=self.run_folder,
+            base_name="loss",
+            print_each_iter=False,
         )
         metrics = {self.main_loss_metric_name: default_loss_metric}
 
@@ -383,8 +386,9 @@ class Trainer(ABC):
             metrics[
                 self.eval_metric_name_format.format(i + 1)
             ] = ScalarMetricCollection(
-                self.writer,
-                evaluator.get_name(),
+                writer=self.writer,
+                root=self.run_folder,
+                base_name=evaluator.get_name(),
                 print_each_iter=True,
                 report_average=False,
             )
@@ -422,3 +426,4 @@ class Trainer(ABC):
             self.metrics[self.eval_metric_name_format.format(i + 1)].add_value(
                 dc_value=eval_result, step=(epoch_num + 1)
             )
+            self.metrics[self.eval_metric_name_format.format(i + 1)].save()
