@@ -63,6 +63,9 @@ class SimpleTrainer(Trainer):
         else:
             return {}
 
+    def figure_accumulate_grad(self) -> int:
+        return self.cfg.trainer.accumulate_grad_every
+
     def figure_num_epochs(self) -> int:
         return self.cfg.trainer.num_epochs
 

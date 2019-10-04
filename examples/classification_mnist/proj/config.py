@@ -28,6 +28,7 @@ _C.model.mlp.last_drop = 0.0
 _C.trainer = CN()
 _C.trainer.num_epochs = 25
 _C.trainer.batch_size = 32
+_C.trainer.accumulate_grad_every = 1
 
 _C.trainer.optimizer = CN()
 _C.trainer.optimizer.name = "SGD"  # [Adam, SGD]
