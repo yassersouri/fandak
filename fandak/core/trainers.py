@@ -209,23 +209,31 @@ class Trainer(ABC):
         # callback
         self.on_start_batch(self.iter_num, batch)
 
+        accumulate_grad_every = self.figure_accumulate_grad()
+        if accumulate_grad_every is None:
+            accumulate_grad_every = 1
+
         # initial setup
-        self.optimizer.zero_grad()
+        if iter_num % accumulate_grad_every == 0:
+            self.optimizer.zero_grad()
         batch.to(self.device)
 
         # forward pass
         forward_out = self.model.forward(batch)
         loss = self.model.loss(batch, forward_out)
 
+        the_loss = loss.main / accumulate_grad_every
+
         # backward pass
-        loss.main.backward()
+        the_loss.backward()
 
         # optional gradient clipping
         if self.clip_grad_norm is not None:
             clip_grad_norm_(self.model.parameters(), max_norm=self.clip_grad_norm)
 
         # optimizer step
-        self.optimizer.step()
+        if iter_num % accumulate_grad_every == (accumulate_grad_every - 1):
+            self.optimizer.step()
 
         # callback
         self.on_finish_batch(self.iter_num, batch, forward_out, loss)
@@ -331,6 +339,9 @@ class Trainer(ABC):
 
     def figure_scheduler(self, optimizer: Optimizer) -> Optional[Scheduler]:
         raise NotImplementedError
+
+    def figure_accumulate_grad(self) -> Optional[int]:
+        return None
 
     # noinspection PyMethodMayBeStatic,PyUnusedLocal
     def figure_scheduler_input(
