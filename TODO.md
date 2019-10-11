@@ -3,6 +3,7 @@
 ## Code
 
  - [ ] Use f-strings instead of other kinds of python formating 
+ - [ ] User hydra instead of yacs
 
 ## Analyzer
 
