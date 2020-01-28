@@ -18,7 +18,7 @@ setuptools.setup(
         "torch>=1.0,<2",
         "torchvision>=0.3,<1",
         "tqdm>=4.32,<5",
-        "matplotlib>=3.1.1,<4",
+        "matplotlib>=3.0.0,<4",
         "tensorboard>=1.14.0,<2",
         "future>=0.17.1,<1",
         "yacs>=0.1.6,<0.2",
