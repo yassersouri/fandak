@@ -86,5 +86,6 @@ class ScalarMetricCollection:
             dictionary = self.values
         if name is None:
             name = f"{self.base_name}"
+        self.root.mkdir(parents=True, exist_ok=True)
         with open(self.root / f"{name}.pkl", "wb") as f:
             dump(dictionary, f)

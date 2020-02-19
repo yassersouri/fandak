@@ -213,6 +213,8 @@ class Trainer(ABC):
         if accumulate_grad_every is None:
             accumulate_grad_every = 1
 
+        # TODO: move to the end.
+        # TODO: move to infinitely flexible callbacks. like fastai v2.
         # initial setup
         if iter_num % accumulate_grad_every == 0:
             self.optimizer.zero_grad()
