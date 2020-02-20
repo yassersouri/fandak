@@ -1,1 +1,0 @@
-cfg = {"system": {"device": "cpu"}}

@@ -1,1 +1,0 @@
-cfg = {"dataset": {"name": "fashion"}}
