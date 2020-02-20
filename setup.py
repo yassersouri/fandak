@@ -1,27 +1,30 @@
 import setuptools
-from fandak import __version__
+
+__version__ = "0.1.0"
 
 with open("README.md", "r") as f:
     long_description = f.read()
+
 
 setuptools.setup(
     name="fandak",
     version=__version__,
     author="Yasser Souri",
     author_email="yassersouri@gmail.com",
-    description="A Framework for Research Using PyTorch",
+    description="A Framework for ML Research Using PyTorch",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/yassersouri/fandak",
-    packages=setuptools.find_packages(exclude=['docs', 'examples', 'tests', 'scripts']),
+    packages=setuptools.find_packages(exclude=["docs", "examples", "tests", "scripts"]),
     install_requires=[
-        "torch>=1.0,<2",
-        "torchvision>=0.3,<1",
-        "tqdm>=4.32,<5",
-        "matplotlib>=3.0.0,<4",
-        "tensorboard>=1.14.0,<2",
-        "future>=0.17.1,<1",
-        "yacs>=0.1.6,<0.2",
+        "torch>=1.4",
+        "torchvision>=0.5",
+        "tqdm>=4.32",
+        "matplotlib>=3.0.0",
+        "tensorboard>=1.14.0",
+        "future>=0.17.1",
+        "yacs>=0.1.6",
+        "click>=7.0",
     ],
     classifiers=[
         "Programming Language :: Python :: 3.7",

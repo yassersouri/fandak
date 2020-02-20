@@ -9,3 +9,4 @@ future>=0.17.1
 yacs>=0.1.6
 pytest>=5.0.1
 black>=19.3b0
+click>=7.0

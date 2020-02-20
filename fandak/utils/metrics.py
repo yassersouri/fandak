@@ -6,7 +6,7 @@ from pickle import dump
 from torch import Tensor
 from torch.utils.tensorboard import SummaryWriter
 
-from fandak.utils import print_with_time
+from fandak.utils.misc import print_with_time
 from fandak.utils.torch import GeneralDataClass
 
 

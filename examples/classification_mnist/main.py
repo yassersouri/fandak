@@ -1,5 +1,9 @@
+from typing import List
+
+import click
 import torch
 
+from fandak.utils import common_config
 from fandak.utils import set_seed
 from fandak.utils.config import update_config
 from proj.config import get_config_defaults
@@ -9,8 +13,15 @@ from proj.models import MLPModel
 from proj.trainers import SimpleTrainer
 
 
-def main():
-    cfg = update_config(get_config_defaults())
+@click.command()
+@common_config
+def main(file_configs: List[str], set_configs: List[str]):
+
+    cfg = update_config(
+        default_config=get_config_defaults(),
+        file_configs=file_configs,
+        set_configs=set_configs,
+    )
     print(cfg)
 
     set_seed(cfg.system.seed)
