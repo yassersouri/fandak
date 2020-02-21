@@ -126,7 +126,7 @@ class Trainer(ABC):
         # also optionally save the config file.
         # is the config object has a `.dump()` function, we will call it and save
         # its content in a `config.yaml` format.
-        if hasattr(self.cfg, 'dump') and callable(self.cfg.dump):
+        if hasattr(self.cfg, "dump") and callable(self.cfg.dump):
             config_path = self.run_folder / "config.yaml"
             with open(config_path, "w") as f:
                 f.write(self.cfg.dump())
