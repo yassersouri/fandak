@@ -71,7 +71,7 @@ class Trainer(ABC):
         # because each epoch you need to have the evaluation value
         self.eval_every = 1
 
-        self.root = self.figure_root()
+        self.root = self.figure_root().expanduser()
         self.optimizer = self.figure_optimizer()
         self.scheduler = self.figure_scheduler(self.optimizer)
         self.clip_grad_norm = self.figure_clip_grad_norm()
@@ -122,6 +122,14 @@ class Trainer(ABC):
 
         # Add the info to tensorboard for easier observation.
         self.writer.add_text("info.txt", result_markdown_linebreak_fixed)
+
+        # also optionally save the config file.
+        # is the config object has a `.dump()` function, we will call it and save
+        # its content in a `config.yaml` format.
+        if hasattr(self.cfg, 'dump') and callable(self.cfg.dump):
+            config_path = self.run_folder / "config.yaml"
+            with open(config_path, "w") as f:
+                f.write(self.cfg.dump())
 
     def save_run_report(
         self, report: str, name: str = "report", extension: str = "txt"
