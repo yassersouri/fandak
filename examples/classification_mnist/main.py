@@ -28,7 +28,7 @@ def main(file_configs: List[str], set_configs: List[str], exp_name: str):
         cfg.freeze()
     print(cfg)
 
-    set_seed(cfg.system.seed)
+    # set_seed(cfg.system.seed)
     device = torch.device(cfg.system.device)
 
     train_db = MNISTClassification(cfg, train=True)

@@ -23,8 +23,12 @@ See `examples` directory.
 Sample usage:
 
 ```bash
-python -m fandak.hyper /path/to/root metric1 [metric2] [--exp-name baseline-*]
+python -m fandak.hyper /path/to/root metric1 [metric2] [--exp-name baseline-*] [--params-list path/to/params/list.txt]
 ```
 
 If no exp-name is provided, then all are going to be considered.
 exp-name can be something usable from glob.
+
+We also have to specify the params list. What to have in the figure? Otherwise, we look
+at the experiments and find the params that are not the same among them.
+If a param is missing from a config file, then it is replaces with "?".
