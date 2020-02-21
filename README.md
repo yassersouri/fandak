@@ -16,3 +16,15 @@ Will help you train your models for research.
 ## Examples
 
 See `examples` directory.
+
+
+## Visualizing the effects of hyper-parameters
+
+Sample usage:
+
+```bash
+python -m fandak.hyper /path/to/root metric1 [metric2] [--exp-name baseline-*]
+```
+
+If no exp-name is provided, then all are going to be considered.
+exp-name can be something usable from glob.
