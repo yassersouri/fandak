@@ -15,13 +15,17 @@ from proj.trainers import SimpleTrainer
 
 @click.command()
 @common_config
-def main(file_configs: List[str], set_configs: List[str]):
-
+@click.option("--exp-name", default="")
+def main(file_configs: List[str], set_configs: List[str], exp_name: str):
     cfg = update_config(
         default_config=get_config_defaults(),
         file_configs=file_configs,
         set_configs=set_configs,
     )
+    if exp_name != "":
+        cfg.defrost()
+        cfg.experiment_name = exp_name
+        cfg.freeze()
     print(cfg)
 
     set_seed(cfg.system.seed)

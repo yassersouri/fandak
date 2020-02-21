@@ -1,0 +1,8 @@
+# local config for my macbook air
+system:
+  root: ~/temp/fandak/mnist_classification/root
+dataset:
+  root: ~/temp/fandak/mnist_classification/data
+trainer:
+  num_epochs: 10
+
