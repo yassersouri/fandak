@@ -117,3 +117,9 @@ class DataParallel(nn.DataParallel):
 
     def loss(self, batch: GeneralBatch, forward_out: GeneralForwardOut):
         return self.module.loss(batch=batch, forward_out=forward_out)
+
+    def __setattr__(self, key, value):
+        self.module.__setattr__(key, value)
+
+    def __getattr__(self, item):
+        return self.module.__getattr__(item)
