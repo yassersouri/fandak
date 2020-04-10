@@ -79,3 +79,11 @@ class Evaluator(ABC):
         create some storage to save intermediate evaluation results.
         """
         pass
+
+    def reset_storage(self):
+        """
+        reset the storage. If you have some storage for the intermediate evaluation results,
+        then they should be reset for every epoch evaluation.
+        Here the default assumption is, if we recreate the storage, it will be reset.
+        """
+        self.set_storage()

@@ -178,6 +178,7 @@ class Trainer(ABC):
             if (epoch_num + 1) % self.eval_every == 0:
                 for evaluator in self.evaluators:
                     eval_results.append(evaluator.evaluate())
+                    evaluator.reset_storage()
                 self.track_end_of_epoch_metrics(eval_results, epoch_num)
 
             # scheduler

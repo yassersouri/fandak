@@ -4,6 +4,7 @@ from typing import Union, Collection, List, Callable, Optional
 import numpy as np
 import torch
 from torch import Tensor
+from torch.optim.optimizer import Optimizer
 from torch.utils.data import Sampler
 
 from fandak.utils.misc import is_listy
@@ -117,3 +118,36 @@ class GeneralDataClass:
             if isinstance(attr, torch.Tensor):
                 setattr(self, attr_name, attr.pin_memory())
         return self
+
+
+class MockParamGroup(dict):
+    def __init__(self, values):
+        super().__init__()
+        self.values = values
+
+    def __getitem__(self, item):
+        assert item in ["lr", "initial_lr"]
+        if item == "lr":
+            return self.values[-1]
+        elif item == "initial_lr":
+            return self.values[0]
+
+    def __setitem__(self, item, value):
+        assert item in ["lr"]
+        return self.values.append(value)
+
+
+class LRVisualizer(Optimizer):
+    def __init__(self, lr):
+        self.the_defaults = {"lr": lr}
+        self.values = [lr]
+
+    def __getattribute__(self, attr):
+        if attr == "param_groups":
+            return [MockParamGroup(self.values)]
+        elif attr == "_step_count":
+            return 1  # just to prevent the warning.
+        elif attr == "defaults":
+            return self.the_defaults
+        else:
+            return super().__getattribute__(attr)
