@@ -1,5 +1,9 @@
 # Release Notes
 
+## (April 14, 2020) version 0.1.2.2
+* (**bug fix**) Moved around creation of the SummaryWriter in the `Trainer` so that `load_training` will not create a new entry
+in Tensorboard.
+
 ## (April 14, 2020) version 0.1.2.1
 * Added plot function to `LRVisualizer`.
 

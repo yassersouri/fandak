@@ -91,7 +91,6 @@ class Trainer(ABC):
     def _set_run_folder(self):
         self.run_folder = self.experiment_folder / str(self.run_number)
         self.tb_folder = self.tb_root / self.exp_name / str(self.run_number)
-        self.writer = SummaryWriter(str(self.tb_folder))
 
     # noinspection PyMethodMayBeStatic
     def extra_info_for_run(self) -> Optional[dict]:
@@ -141,6 +140,7 @@ class Trainer(ABC):
         fig.savefig(self.run_folder / ("%s.png" % name))
 
     def _mark_the_run(self):
+        self.writer = SummaryWriter(str(self.tb_folder))
         self.run_folder.mkdir(exist_ok=True, parents=True)
         self._save_info_of_run()
 
