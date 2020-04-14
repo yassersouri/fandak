@@ -1,5 +1,8 @@
 # TODO
 
+## Functionality
+ - [ ] Add support for [optuna](https://github.com/optuna/optuna)
+
 ## Code
 
  - [ ] Use f-strings instead of other kinds of python formating 
