@@ -151,3 +151,9 @@ class LRVisualizer(Optimizer):
             return self.the_defaults
         else:
             return super().__getattribute__(attr)
+
+    def plot(self):
+        import matplotlib.pylab as plt
+
+        ax = plt.gca()
+        ax.plot(self.values)
