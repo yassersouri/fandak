@@ -85,7 +85,6 @@ class Trainer(ABC):
         self.experiment_folder.mkdir(exist_ok=True, parents=True)
         self.run_number = self._figure_run_number()
         self._set_run_folder()
-        self.metrics = self.create_metrics()
         self.update_trainer_using_config()
 
     def _set_run_folder(self):
@@ -143,6 +142,7 @@ class Trainer(ABC):
         self.writer = SummaryWriter(str(self.tb_folder))
         self.run_folder.mkdir(exist_ok=True, parents=True)
         self._save_info_of_run()
+        self.metrics = self.create_metrics()
 
     def train(self):
         num_epochs = self.figure_num_epochs()

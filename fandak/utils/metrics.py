@@ -2,6 +2,7 @@ from collections import defaultdict
 from numbers import Number
 from pathlib import Path
 from pickle import dump
+from typing import Optional
 
 from torch import Tensor
 from torch.utils.tensorboard import SummaryWriter
@@ -13,7 +14,7 @@ from fandak.utils.torch import GeneralDataClass
 class ScalarMetricCollection:
     def __init__(
         self,
-        writer: SummaryWriter,
+        writer: Optional[SummaryWriter],
         root: Path,
         base_name: str,
         print_each_iter: bool = False,
@@ -52,7 +53,8 @@ class ScalarMetricCollection:
                 value = attr.item()
             else:
                 value = attr
-            self.writer.add_scalar(tag_name, scalar_value=value, global_step=step)
+            if self.writer:
+                self.writer.add_scalar(tag_name, scalar_value=value, global_step=step)
             self.values[attr_name].append(value)
             if self.print_each_iter:
                 print_with_time(f"(step {step}) {tag_name}: {value}")
@@ -64,9 +66,10 @@ class ScalarMetricCollection:
                 average_value = self.average_value(attr_name)
                 average_values[attr_name] = average_value
                 tag_name = f"{self.average_base_tag}/{attr_name}"
-                self.writer.add_scalar(
-                    tag=tag_name, scalar_value=average_value, global_step=epoch_num + 1
-                )
+                if self.writer:
+                    self.writer.add_scalar(
+                        tag=tag_name, scalar_value=average_value, global_step=epoch_num + 1
+                    )
                 print_with_time(f"{tag_name}: {average_value}")
             self.save(
                 dictionary=average_values,
