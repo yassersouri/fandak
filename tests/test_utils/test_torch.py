@@ -73,7 +73,10 @@ class TestGeneralDataClass(TestCase):
             self.assertEqual(x.c.device.type, "cuda")
             self.assertTrue(isinstance(x.a, int))
         else:
-            print("Skipping test %s. No GPU is available" % self.test_sending_to_device.__name__)
+            print(
+                "Skipping test %s. No GPU is available"
+                % self.test_sending_to_device.__name__
+            )
 
     def test_pin_memory(self):
         @dataclass
@@ -89,4 +92,6 @@ class TestGeneralDataClass(TestCase):
             self.assertTrue(x.b.is_pinned())
             self.assertTrue(x.c.is_pinned())
         else:
-            print("Skipping test %s. No GPU is available" % self.test_pin_memory.__name__)
+            print(
+                "Skipping test %s. No GPU is available" % self.test_pin_memory.__name__
+            )

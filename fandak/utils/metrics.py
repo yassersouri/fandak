@@ -68,7 +68,9 @@ class ScalarMetricCollection:
                 tag_name = f"{self.average_base_tag}/{attr_name}"
                 if self.writer:
                     self.writer.add_scalar(
-                        tag=tag_name, scalar_value=average_value, global_step=epoch_num + 1
+                        tag=tag_name,
+                        scalar_value=average_value,
+                        global_step=epoch_num + 1,
                     )
                 print_with_time(f"{tag_name}: {average_value}")
             self.save(
