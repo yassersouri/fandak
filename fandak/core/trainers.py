@@ -218,6 +218,7 @@ class Trainer(ABC):
         # callback
         self.on_start_batch(self.iter_num, batch)
 
+        # FIXME: this might be slow depending on the config system
         accumulate_grad_every = self.figure_accumulate_grad()
         if accumulate_grad_every is None:
             accumulate_grad_every = 1
