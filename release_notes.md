@@ -1,5 +1,8 @@
 # Release Notes
 
+## (June 25, 2020) version 0.1.2.4
+* Removing explicit dependency for pytorch vision greater than 1.1
+
 ## (April 14, 2020) version 0.1.2.3
 * (**bug fix**) Moved around creation of the SummaryWriter in the `Trainer` so that `load_training` will not create a new entry
 in Tensorboard. This also meant that I had to change the location of `create_metrics` call.

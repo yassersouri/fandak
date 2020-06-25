@@ -1,6 +1,6 @@
 import setuptools
 
-__version__ = "0.1.2.3"
+__version__ = "0.1.2.4"
 
 with open("README.md", "r") as f:
     long_description = f.read()
@@ -17,8 +17,8 @@ setuptools.setup(
     url="https://github.com/yassersouri/fandak",
     packages=setuptools.find_packages(exclude=["docs", "examples", "tests", "scripts"]),
     install_requires=[
-        "torch>=1.4",
-        "torchvision>=0.5",
+        "torch>=1.1",
+        "torchvision>=0.3",
         "tqdm>=4.32",
         "matplotlib>=3.0.0",
         "tensorboard>=1.14.0",

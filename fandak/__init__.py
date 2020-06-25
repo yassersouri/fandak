@@ -7,7 +7,7 @@ from .core.models import Model
 from .core.trainers import Trainer
 
 name = "fandak"
-__version__ = "0.1.2.3"
+__version__ = "0.1.2.4"
 
 __all__ = [
     "Dataset",
