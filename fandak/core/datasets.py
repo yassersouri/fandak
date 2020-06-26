@@ -21,9 +21,8 @@ class GeneralBatch(GeneralDataClass):
         """
         values = {}
         for attr_name in items[0].get_attribute_names():
-            if isinstance(getattr(items[0], attr_name), Tensor):
-                attrs = [getattr(i, attr_name) for i in items]
-                values[attr_name] = default_collate(attrs)
+            attrs = [getattr(i, attr_name) for i in items]
+            values[attr_name] = default_collate(attrs)
 
         # noinspection PyArgumentList
         return cls(**values)

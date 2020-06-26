@@ -1,5 +1,8 @@
 # Release Notes
 
+## (June 26, 2020) version 0.1.2.5
+* Change GeneralBatch's `default_collate` so that non-`Tensor` types are also collated correctly.
+
 ## (June 25, 2020) version 0.1.2.4
 * Removing explicit dependency for pytorch vision greater than 1.1
 
