@@ -11,7 +11,7 @@ from proj.datasets import Batch
 from proj.models import ForwardOut
 
 
-@dataclass
+@dataclass(repr=False)
 class TrainEvaluationResult(GeneralEvaluatorResult):
     accuracy: float
     average_loss: float

@@ -11,7 +11,7 @@ from fandak.core.models import Model, GeneralForwardOut
 from fandak.utils.torch import GeneralDataClass
 
 
-@dataclass
+@dataclass(repr=False)
 class GeneralEvaluatorResult(GeneralDataClass):
     pass
 

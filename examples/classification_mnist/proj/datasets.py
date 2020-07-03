@@ -11,7 +11,7 @@ from fandak import Dataset
 from fandak.core.datasets import GeneralBatch
 
 
-@dataclass
+@dataclass(repr=False)
 class Batch(GeneralBatch):
     x: Tensor  # [784] float
     y: Tensor  # [1] long

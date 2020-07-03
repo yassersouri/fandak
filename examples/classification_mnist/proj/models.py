@@ -10,7 +10,7 @@ from fandak.core.models import GeneralLoss
 from proj.datasets import Batch
 
 
-@dataclass
+@dataclass(repr=False)
 class ForwardOut:
     logits: Tensor  # [N x C]
 

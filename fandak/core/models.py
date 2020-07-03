@@ -10,7 +10,7 @@ from fandak.core.datasets import GeneralBatch
 from fandak.utils.torch import GeneralDataClass
 
 
-@dataclass
+@dataclass(repr=False)
 class GeneralLoss(GeneralDataClass):
     """
     I assume that there is always the `main` attribute which is the loss that is
@@ -20,7 +20,7 @@ class GeneralLoss(GeneralDataClass):
     main: Tensor
 
 
-@dataclass
+@dataclass(repr=False)
 class GeneralForwardOut(GeneralDataClass):
     """
     The general output of the forward pass.

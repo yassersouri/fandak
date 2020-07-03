@@ -11,7 +11,7 @@ from yacs.config import CfgNode
 from fandak.utils.torch import GeneralDataClass
 
 
-@dataclass
+@dataclass(repr=False)
 class GeneralBatch(GeneralDataClass):
     @classmethod
     def default_collate(cls, items: List["GeneralBatch"]) -> "GeneralBatch":
