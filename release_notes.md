@@ -1,5 +1,8 @@
 # Release Notes
 
+## (July 3, 2020) version 0.1.2.6
+* Add default `__repr__` implementation for `GeneralDataClass`.
+
 ## (June 26, 2020) version 0.1.2.5
 * Change GeneralBatch's `default_collate` so that non-`Tensor` types are also collated correctly.
 

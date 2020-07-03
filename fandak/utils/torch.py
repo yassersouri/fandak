@@ -119,6 +119,23 @@ class GeneralDataClass:
                 setattr(self, attr_name, attr.pin_memory())
         return self
 
+    def __repr__(self) -> str:
+        attnames = self.get_attribute_names()
+        lines = []
+        prep = "\t"
+        lines.append(f"{self.__class__.__name__}: (")
+        for an in attnames:
+            att = self.__getattribute__(an)
+            li = f"{an}: "
+            if isinstance(att, torch.Tensor) or isinstance(att, np.ndarray):
+                li += f" {att.dtype}| {att.shape}"
+            else:
+                li += f"{att.__repr__()}"
+            lines.append(prep + li)
+        lines.append(f")")
+
+        return "\n".join(lines)
+
 
 class MockParamGroup(dict):
     def __init__(self, values):
