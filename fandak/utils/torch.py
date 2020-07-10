@@ -120,6 +120,10 @@ class GeneralDataClass:
         return self
 
     def __repr__(self) -> str:
+        """
+        If you want to inherit this function in you dataclass, you should set repr=False.
+        e.g. `@dataclass(repr=False)`
+        """
         attnames = self.get_attribute_names()
         lines = []
         prep = "\t"

@@ -1,5 +1,10 @@
 # Release Notes
 
+## (July 3, 2020) version 0.1.2.7
+* Changed the behaviour of `_save_info_of_run` in the `Trainer`.
+    * It now saves better markdown info.
+    * It now assumes that `cfg` has `.dump` function. (This was also assumed before, now it is more explicit)
+
 ## (July 3, 2020) version 0.1.2.6
 * Add default `__repr__` implementation for `GeneralDataClass`.
 

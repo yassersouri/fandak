@@ -21,15 +21,20 @@ from fandak.core.models import Model, GeneralLoss, GeneralForwardOut
 from fandak.utils.metrics import ScalarMetricCollection
 from fandak.utils.misc import get_git_commit_hash, print_with_time
 
-RUN_INFO_TEMPLATE = """Time: {time}
-Command: {command}
-Git hash: {hash}
+RUN_INFO_TEMPLATE = """Time: {time}  
+Command: {command}  
+Git hash: {hash}  
+
 -----------------------------------------
+
 {config}
+
 """
 
 RUN_EXTRA_TEMPLATE = """-----------------------------------------
+
 {extra}
+
 """
 
 TORCH_EXT = "trc"
@@ -98,7 +103,12 @@ class Trainer(ABC):
     def _save_info_of_run(self):
         extra_info = self.extra_info_for_run()
 
+        # fixme: assuming self.cfg has a `.dump` function.
         config_dump = self.cfg.dump()
+
+        # adding 4 spaces at the beginning of each line
+        # this is because now tensorboard's text section can visualize it as code block
+        config_dump = "\n".join([f"    {l}" for l in config_dump.split("\n")])
 
         final_value = RUN_INFO_TEMPLATE
 
@@ -112,22 +122,15 @@ class Trainer(ABC):
         if extra_info:
             result += RUN_EXTRA_TEMPLATE.format(extra=extra_info)
 
-        with open(self.run_folder / Path("info.txt"), "w") as f:
+        with open(self.run_folder / Path("info.md"), "w") as f:
             f.write(result)
 
-        # fixme: there is still a lot of problems with viewing here
-        result_markdown_linebreak_fixed = result.replace("\n", "  \n")
-
         # Add the info to tensorboard for easier observation.
-        self.writer.add_text("info.txt", result_markdown_linebreak_fixed)
+        self.writer.add_text("info", result)
 
-        # also optionally save the config file.
-        # is the config object has a `.dump()` function, we will call it and save
-        # its content in a `config.yaml` format.
-        if hasattr(self.cfg, "dump") and callable(self.cfg.dump):
-            config_path = self.run_folder / "config.yaml"
-            with open(config_path, "w") as f:
-                f.write(self.cfg.dump())
+        config_path = self.run_folder / "config.yaml"
+        with open(config_path, "w") as f:
+            f.write(self.cfg.dump())
 
     def save_run_report(
         self, report: str, name: str = "report", extension: str = "txt"
