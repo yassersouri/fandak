@@ -13,6 +13,10 @@ Will help you train your models for research.
 
 `pip install fandak`
 
+## Release Notes
+
+[Release Notes](release_notes.md)
+
 ## Examples
 
 See `examples` directory.
