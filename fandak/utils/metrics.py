@@ -11,6 +11,20 @@ from fandak.utils.misc import print_with_time
 from fandak.utils.torch import GeneralDataClass
 
 
+def is_scalar_like(ds: GeneralDataClass, an: str) -> bool:
+    a = getattr(ds, an)
+    if isinstance(a, Tensor):  # is Tensor
+        try:  # has .item()
+            a.item()
+        except ValueError:
+            return False
+        return True
+    elif isinstance(a, Number):  # is Number
+        return True
+    else:
+        return False
+
+
 class ScalarMetricCollection:
     def __init__(
         self,
@@ -29,19 +43,6 @@ class ScalarMetricCollection:
         self.average_base_tag = f"training_average/{self.base_name}"
 
     def add_value(self, dc_value: GeneralDataClass, step: int):
-        def is_scalar_like(ds: GeneralDataClass, an: str) -> bool:
-            a = getattr(ds, an)
-            if isinstance(a, Tensor):  # is Tensor
-                try:  # has .item()
-                    a.item()
-                except ValueError:
-                    return False
-                return True
-            elif isinstance(a, Number):  # is Number
-                return True
-            else:
-                return False
-
         loss_like_attr_names = dc_value.filter_attributes(
             is_scalar_like, initial_attr_list=dc_value.get_attribute_names()
         )
@@ -58,6 +59,22 @@ class ScalarMetricCollection:
             self.values[attr_name].append(value)
             if self.print_each_iter:
                 print_with_time(f"(step {step}) {tag_name}: {value}")
+
+    def set_value(self, dc_value: GeneralDataClass, step: int):
+        loss_like_attr_names = dc_value.filter_attributes(
+            is_scalar_like, initial_attr_list=dc_value.get_attribute_names()
+        )
+
+        for attr_name in loss_like_attr_names:
+            attr = getattr(dc_value, attr_name)
+            if isinstance(attr, Tensor):
+                value = attr.item()
+            else:
+                value = attr
+            try:
+                self.values[attr_name][step] = value
+            except (KeyError, IndexError):
+                pass
 
     def epoch_finished(self, epoch_num: int):
         if self.report_average:

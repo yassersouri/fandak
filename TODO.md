@@ -5,7 +5,8 @@
 
 ## Code
 
- - [ ] Use f-strings instead of other kinds of python formating 
+ - [ ] Use f-strings instead of other kinds of python formating
+ - [ ] Add proper logger. 
 
 ## Analyzer
 
