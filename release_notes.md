@@ -1,5 +1,7 @@
 # Release Notes
 
+## (August 4, 2020) version 0.1.3
+* Add lock file to `_figure_run_number` in `Trainer` so it becomes thread safe. Used `oslu_concurrency` for this functionality.
 
 ## (July 10, 2020) version 0.1.2.8
 * Add `set_value` functionality for `ScalarMetricCollection`. This could be used for setting some value after training and saving it.

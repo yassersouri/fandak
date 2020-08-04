@@ -20,6 +20,7 @@ from fandak.core.evaluators import Evaluator, GeneralEvaluatorResult
 from fandak.core.models import Model, GeneralLoss, GeneralForwardOut
 from fandak.utils.metrics import ScalarMetricCollection
 from fandak.utils.misc import get_git_commit_hash, print_with_time
+from fandak.utils.locks import lock
 
 RUN_INFO_TEMPLATE = """Time: {time}  
 Command: {command}  
@@ -335,14 +336,15 @@ class Trainer(ABC):
     def _figure_run_number(self) -> int:
         # fixme: this is not thread safe!
         max_run = 0
-        for f in self.experiment_folder.iterdir():
-            if f.is_dir():
-                try:
-                    f = int(str(f.name))
-                except ValueError:
-                    continue
-                if f > max_run:
-                    max_run = f
+        with lock(f"run_number.{str(self.experiment_folder)}"):
+            for f in self.experiment_folder.iterdir():
+                if f.is_dir():
+                    try:
+                        f = int(str(f.name))
+                    except ValueError:
+                        continue
+                    if f > max_run:
+                        max_run = f
 
         return max_run + 1
 
