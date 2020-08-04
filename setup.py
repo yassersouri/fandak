@@ -1,6 +1,6 @@
 import setuptools
 
-__version__ = "0.1.3"
+__version__ = "0.1.3.1"
 
 with open("README.md", "r") as f:
     long_description = f.read()
@@ -25,6 +25,7 @@ setuptools.setup(
         "future>=0.17.1",
         "yacs>=0.1.6",
         "click>=7.0",
+        "oslo_concurrency>=4.2.0",
     ],
     classifiers=[
         "Programming Language :: Python :: 3.7",
